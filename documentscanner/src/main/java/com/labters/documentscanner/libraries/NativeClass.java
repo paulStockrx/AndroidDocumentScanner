@@ -88,6 +88,14 @@ public class NativeClass {
         Mat gray0 = new Mat(blurred.size(), CvType.CV_8U);
         Mat gray = new Mat();
 
+//        Mat imgGray = new Mat();
+//        Mat medianBlurred = new Mat();
+//
+//        Imgproc.medianBlur(imgGray, medianBlurred, 9);
+//        Mat gray0 = new Mat(medianBlurred.size(), CvType.CV_8U);
+//        Imgproc.Canny(medianBlurred, blurred, 200.0, 200.0);
+
+
         // For Core.mixChannels.
         List<MatOfPoint> contours = new ArrayList<>();
         List<MatOfPoint2f> rectangles = new ArrayList<>();

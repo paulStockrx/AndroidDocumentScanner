@@ -18,13 +18,20 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.labters.documentscanner.libraries.NativeClass
+import com.labters.documentscanner.libraries.PerspectiveTransformation
 import com.labters.documentscanner.libraries.PolygonView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import org.opencv.android.Utils
+import org.opencv.core.CvType
+import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint2f
+import org.opencv.core.Point
+import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc
 import java.util.*
 
 class DocumentScannerView @JvmOverloads constructor(
@@ -162,8 +169,26 @@ class DocumentScannerView @JvmOverloads constructor(
         return orderedPoints
     }
 
+//    @Throws
+//    fun getCroppedImage(): Bitmap {
+//        val points: Map<Int, PointF> = polygonView.points
+//        val xRatio: Float = selectedImage.width.toFloat() / image.width
+//        val yRatio: Float = selectedImage.height.toFloat() / image.height
+//        val x1 = points[0]!!.x * xRatio
+//        val x2 = points[1]!!.x * xRatio
+//        val x3 = points[2]!!.x * xRatio
+//        val x4 = points[3]!!.x * xRatio
+//        val y1 = points[0]!!.y * yRatio
+//        val y2 = points[1]!!.y * yRatio
+//        val y3 = points[2]!!.y * yRatio
+//        val y4 = points[3]!!.y * yRatio
+//        val finalBitmap: Bitmap = selectedImage.copy(selectedImage.config, true)
+//        return nativeClass.getScannedBitmap(finalBitmap, x1, y1, x2, y2, x3, y3, x4, y4)
+//    }
     @Throws
     fun getCroppedImage(): Bitmap {
+        val perspectiveTransformation = PerspectiveTransformation()
+
         val points: Map<Int, PointF> = polygonView.points
         val xRatio: Float = selectedImage.width.toFloat() / image.width
         val yRatio: Float = selectedImage.height.toFloat() / image.height
@@ -175,8 +200,38 @@ class DocumentScannerView @JvmOverloads constructor(
         val y2 = points[1]!!.y * yRatio
         val y3 = points[2]!!.y * yRatio
         val y4 = points[3]!!.y * yRatio
-        val finalBitmap: Bitmap = selectedImage.copy(selectedImage.config, true)
-        return nativeClass.getScannedBitmap(finalBitmap, x1, y1, x2, y2, x3, y3, x4, y4)
+
+        val point1 = Point(x1.toDouble(), y1.toDouble())
+        val point2 = Point(x2.toDouble(), y2.toDouble())
+        val point3 = Point(x3.toDouble(), y3.toDouble())
+        val point4 = Point(x4.toDouble(), y4.toDouble())
+        val cornerPoints = MatOfPoint2f(point1, point2, point3, point4)
+
+        val selectedImageMat = Mat(selectedImage.width, selectedImage.height, CvType.CV_8UC1)
+        Utils.bitmapToMat(selectedImage, selectedImageMat)
+
+        val resultMat = perspectiveTransformation.transform(selectedImageMat, cornerPoints)
+
+        val resultBitmap = Bitmap.createBitmap(resultMat.cols(), resultMat.rows(), Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(resultMat, resultBitmap)
+
+        val grayMat = Mat()
+        Imgproc.cvtColor(resultMat, grayMat, Imgproc.COLOR_RGB2GRAY)
+
+        Imgproc.GaussianBlur(grayMat, grayMat, Size(5.0, 5.0), 0.0)
+
+        Imgproc.adaptiveThreshold(grayMat, grayMat, 255.0,
+            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+            Imgproc.THRESH_BINARY, 11, 2.0)
+
+        val finalBitmap = Bitmap.createBitmap(grayMat.cols(), grayMat.rows(), Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(grayMat, finalBitmap)
+
+        resultMat.release()
+        grayMat.release()
+        selectedImageMat.release()
+
+        return finalBitmap
     }
 
     private fun doWhenInitialised(function: () -> Unit) {
