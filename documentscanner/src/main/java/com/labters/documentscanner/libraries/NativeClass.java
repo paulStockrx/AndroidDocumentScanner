@@ -21,10 +21,13 @@ import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -77,80 +80,306 @@ public class NativeClass {
         return result;
     }
 
-    //public native float[] getPoints(Bitmap bitmap);
-    public List<MatOfPoint2f> getPoints(Mat src) {
+    public Mat increaseContrast(Mat originalImage) {
+        // Create a Mat object to store the result
+        Mat result = new Mat(originalImage.size(), originalImage.type());
 
-        // Blur the image to filter out the noise.
-        Mat blurred = new Mat();
-        Imgproc.medianBlur(src, blurred, 9);
+        // The alpha value defines the contrast.
+        // The higher the alpha value, the higher the contrast.
+        // You can adjust this value according to your needs.
+        double alpha = 1.5; // Try different values; 1.0 means original image.
 
-        // Set up images to use.
-        Mat gray0 = new Mat(blurred.size(), CvType.CV_8U);
-        Mat gray = new Mat();
+        // The beta value allows you to adjust the brightness,
+        // but for contrast enhancement, it's typically kept at 0.
+        double beta = -1.0;
 
-//        Mat imgGray = new Mat();
-//        Mat medianBlurred = new Mat();
+        // Apply the contrast adjustment
+        originalImage.convertTo(result, -1, alpha, beta);
+
+        return result;
+    }
+
+//    original
+//    public List<MatOfPoint2f> getPoints(Mat src) {
 //
-//        Imgproc.medianBlur(imgGray, medianBlurred, 9);
-//        Mat gray0 = new Mat(medianBlurred.size(), CvType.CV_8U);
-//        Imgproc.Canny(medianBlurred, blurred, 200.0, 200.0);
+//        if (src.empty()) {
+//            throw new IllegalArgumentException("Input Mat 'src' is empty.");
+//        }
+//
+//        // Blur the image to filter out the noise.
+//        Mat blurred = new Mat();
+//        Mat imgGray = new Mat();
+//
+//        Mat contrast = increaseContrast(src);
+//        Imgproc.cvtColor(contrast, imgGray, Imgproc.COLOR_BGR2GRAY);
+//        Imgproc.medianBlur(imgGray, blurred, 5);
+//
+//        // Set up images to use.
+////        Mat gray0 = new Mat(blurred.size(), blurred.depth());
+//        Mat gray0 = new Mat(blurred.size(), CvType.CV_8U);
+//        Mat gray = new Mat();
+//
+//        // For Core.mixChannels.
+//        List<MatOfPoint> contours = new ArrayList<>();
+//        List<MatOfPoint2f> rectangles = new ArrayList<>();
+//
+//        List<Mat> sources = new ArrayList<>();
+//        sources.add(blurred);
+//        List<Mat> destinations = new ArrayList<>();
+//        destinations.add(gray0);
+//
+//        // To filter rectangles by their areas.
+//        int srcArea = src.rows() * src.cols();
+//
+//        // Find squares in every color plane of the image.
+//        for (int c = 0; c < 3; c++) {
+//            int[] ch = {c, 0};
+//            MatOfInt fromTo = new MatOfInt(ch);
+//
+//            Core.mixChannels(sources, destinations, fromTo);
+//
+//            // Try several threshold levels.
+//            for (int l = 0; l < THRESHOLD_LEVEL; l++) {
+//                if (l == 0) {
+//                    // HACK: Use Canny instead of zero threshold level.
+//                    // Canny helps to catch squares with gradient shading.
+//                    // NOTE: No kernel size parameters on Java API.
+//                    Imgproc.Canny(gray0, gray, 10, 20);
+//
+//                    // Dilate Canny output to remove potential holes between edge segments.
+//                    Imgproc.dilate(gray, gray, Mat.ones(new Size(3, 3), 0));
+//                } else {
+//                    int threshold = (l + 1) * 255 / THRESHOLD_LEVEL;
+//                    Imgproc.threshold(gray0, gray, threshold, 255, Imgproc.THRESH_BINARY);
+//                }
+//
+//                // Find contours and store them all as a list.
+//                Imgproc.findContours(gray, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//                for (MatOfPoint contour : contours) {
+//                    MatOfPoint2f contourFloat = MathUtils.toMatOfPointFloat(contour);
+//                    double arcLen = Imgproc.arcLength(contourFloat, true) * 0.02;
+//
+//                    // Approximate polygonal curves.
+//                    MatOfPoint2f approx = new MatOfPoint2f();
+//                    Imgproc.approxPolyDP(contourFloat, approx, arcLen, true);
+//
+//                    if (isRectangle(approx, srcArea)) {
+//                        rectangles.add(approx);
+//                    }
+//                }
+//            }
+//        }
+//
+//        return rectangles;
+//
+//    }
 
+////    contrast canny
+//    public List<MatOfPoint2f> getPoints(Mat src) {
+//        if (src.empty()) {
+//            throw new IllegalArgumentException("Input Mat 'src' is empty.");
+//        }
+//
+//        // Apply contrast enhancement and convert to grayscale
+//        Mat contrastEnhanced = increaseContrast(src);
+//        Mat imgGray = new Mat();
+//        Imgproc.cvtColor(contrastEnhanced, imgGray, Imgproc.COLOR_BGR2GRAY);
+//
+//        // Apply median blur to the grayscale image
+//        Mat blurred = new Mat();
+//        Imgproc.medianBlur(imgGray, blurred, 5);
+//
+//        // Prepare for contour detection
+//        Mat grayCanny = new Mat();
+//        Imgproc.Canny(blurred, grayCanny, 50, 80);
+//        Imgproc.dilate(grayCanny, grayCanny, Mat.ones(new Size(3, 3), 0));
+//
+//        // Find contours
+//        List<MatOfPoint> contours = new ArrayList<>();
+//        Imgproc.findContours(grayCanny, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//        // Process contours to find rectangles
+//        List<MatOfPoint2f> rectangles = new ArrayList<>();
+//        int srcArea = src.rows() * src.cols();
+//        for (MatOfPoint contour : contours) {
+//            MatOfPoint2f contourFloat = MathUtils.toMatOfPointFloat(contour);
+//            double arcLen = Imgproc.arcLength(contourFloat, true) * 0.02;
+//            MatOfPoint2f approx = new MatOfPoint2f();
+//            Imgproc.approxPolyDP(contourFloat, approx, arcLen, true);
+//
+//            if (isRectangle(approx, srcArea)) {
+//                rectangles.add(approx);
+//            }
+//        }
+//
+//        return rectangles;
+//    }
 
-        // For Core.mixChannels.
+//    adaptiveThreshold
+//    public List<MatOfPoint2f> getPoints(Mat src) {
+//        if (src.empty()) {
+//            throw new IllegalArgumentException("Input Mat 'src' is empty.");
+//        }
+//
+//        // Apply contrast enhancement
+//        Mat contrastEnhanced = increaseContrast(src);
+//
+//        // Convert to grayscale
+//        Mat imgGray = new Mat();
+//        Imgproc.cvtColor(contrastEnhanced, imgGray, Imgproc.COLOR_BGR2GRAY);
+//
+//        // Apply Gaussian blur
+//        Imgproc.GaussianBlur(imgGray, imgGray, new Size(5.0, 5.0), 0.0);
+//
+//        // Apply adaptive threshold
+//        Imgproc.adaptiveThreshold(imgGray, imgGray, 255.0,
+//                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+//                Imgproc.THRESH_BINARY, 11, 2.0);
+//
+//        // Find contours
+//        List<MatOfPoint> contours = new ArrayList<>();
+//        Imgproc.findContours(imgGray, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//        // Process contours to find rectangles
+//        List<MatOfPoint2f> rectangles = new ArrayList<>();
+//        int srcArea = src.rows() * src.cols();
+//        for (MatOfPoint contour : contours) {
+//            MatOfPoint2f contourFloat = MathUtils.toMatOfPointFloat(contour);
+//            double arcLen = Imgproc.arcLength(contourFloat, true) * 0.02;
+//            MatOfPoint2f approx = new MatOfPoint2f();
+//            Imgproc.approxPolyDP(contourFloat, approx, arcLen, true);
+//
+//            if (isRectangle(approx, srcArea)) {
+//                rectangles.add(approx);
+//            }
+//        }
+//
+//        return rectangles;
+//    }
+
+    //    HSV
+//    public List<MatOfPoint2f> getPoints(Mat src) {
+//        if (src.empty()) {
+//            throw new IllegalArgumentException("Input Mat 'src' is empty.");
+//        }
+//
+//        Mat hsvImage = new Mat();
+//        Imgproc.cvtColor(src, hsvImage, Imgproc.COLOR_BGR2HSV);
+//
+//        // Split into individual channels (Hue, Saturation, Value)
+//        List<Mat> hsvChannels = new ArrayList<>();
+//        Core.split(hsvImage, hsvChannels);
+//        Mat hue = hsvChannels.get(0);
+//        Mat saturation = hsvChannels.get(1);
+//        Mat value = hsvChannels.get(2);
+//
+//        int delta_hue = 10;
+//        int delta_saturation = -20;
+//        int delta_value = 30;
+//
+//        Core.add(hue, Scalar.all(delta_hue), hue);
+//        Core.add(saturation, Scalar.all(delta_saturation), saturation);
+////        Core.add(value, Scalar.all(delta_value), value);
+//        Core.merge(hsvChannels, hsvImage);
+//
+//        Mat processedImage = new Mat();
+//        Imgproc.cvtColor(hsvImage, processedImage, Imgproc.COLOR_BGR2GRAY);
+//
+////        Imgproc.equalizeHist(processedImage, processedImage);
+////
+//
+//        // Find contours
+//        List<MatOfPoint> contours = new ArrayList<>();
+//        Imgproc.findContours(processedImage, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//        // Process contours to find rectangles
+//        List<MatOfPoint2f> rectangles = new ArrayList<>();
+//        int srcArea = src.rows() * src.cols();
+//        for (MatOfPoint contour : contours) {
+//            MatOfPoint2f contourFloat = MathUtils.toMatOfPointFloat(contour);
+//            double arcLen = Imgproc.arcLength(contourFloat, true) * 0.02;
+//            MatOfPoint2f approx = new MatOfPoint2f();
+//            Imgproc.approxPolyDP(contourFloat, approx, arcLen, true);
+//
+//            if (isRectangle(approx, srcArea)) {
+//                rectangles.add(approx);
+//            }
+//        }
+//
+//        return rectangles;
+//    }
+
+    // best
+    public List<MatOfPoint2f> getPoints(Mat src) {
+        if (src.empty()) {
+            throw new IllegalArgumentException("Input Mat 'src' is empty.");
+        }
+
+        Mat modifiedImage = getModifiedImage(src);
+
+        // Find contours
         List<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(modifiedImage, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        // Process contours to find rectangles
         List<MatOfPoint2f> rectangles = new ArrayList<>();
-
-        List<Mat> sources = new ArrayList<>();
-        sources.add(blurred);
-        List<Mat> destinations = new ArrayList<>();
-        destinations.add(gray0);
-
-        // To filter rectangles by their areas.
         int srcArea = src.rows() * src.cols();
+        for (MatOfPoint contour : contours) {
+            MatOfPoint2f contourFloat = MathUtils.toMatOfPointFloat(contour);
+            double arcLen = Imgproc.arcLength(contourFloat, true) * 0.02;
+            MatOfPoint2f approx = new MatOfPoint2f();
+            Imgproc.approxPolyDP(contourFloat, approx, arcLen, true);
 
-        // Find squares in every color plane of the image.
-        for (int c = 0; c < 3; c++) {
-            int[] ch = {c, 0};
-            MatOfInt fromTo = new MatOfInt(ch);
-
-            Core.mixChannels(sources, destinations, fromTo);
-
-            // Try several threshold levels.
-            for (int l = 0; l < THRESHOLD_LEVEL; l++) {
-                if (l == 0) {
-                    // HACK: Use Canny instead of zero threshold level.
-                    // Canny helps to catch squares with gradient shading.
-                    // NOTE: No kernel size parameters on Java API.
-                    Imgproc.Canny(gray0, gray, 10, 20);
-
-                    // Dilate Canny output to remove potential holes between edge segments.
-                    Imgproc.dilate(gray, gray, Mat.ones(new Size(3, 3), 0));
-                } else {
-                    int threshold = (l + 1) * 255 / THRESHOLD_LEVEL;
-                    Imgproc.threshold(gray0, gray, threshold, 255, Imgproc.THRESH_BINARY);
-                }
-
-                // Find contours and store them all as a list.
-                Imgproc.findContours(gray, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-
-                for (MatOfPoint contour : contours) {
-                    MatOfPoint2f contourFloat = MathUtils.toMatOfPointFloat(contour);
-                    double arcLen = Imgproc.arcLength(contourFloat, true) * 0.02;
-
-                    // Approximate polygonal curves.
-                    MatOfPoint2f approx = new MatOfPoint2f();
-                    Imgproc.approxPolyDP(contourFloat, approx, arcLen, true);
-
-                    if (isRectangle(approx, srcArea)) {
-                        rectangles.add(approx);
-                    }
-                }
+            if (isRectangle(approx, srcArea)) {
+                rectangles.add(approx);
             }
         }
 
         return rectangles;
-
     }
+
+    private Mat getModifiedImage(Mat src) {
+        Mat hsvImage = new Mat();
+        Imgproc.cvtColor(src, hsvImage, Imgproc.COLOR_BGR2HSV);
+
+        List<Mat> hsvChannels = new ArrayList<>();
+        Core.split(hsvImage, hsvChannels);
+        Mat hue = hsvChannels.get(0);
+        Mat saturation = hsvChannels.get(1);
+        Mat value = hsvChannels.get(2);
+
+        int delta_hue = 10;
+        int delta_saturation = 80;
+        int delta_value = 40;
+
+        Mat modifiedHue = new Mat();
+        Mat modifiedSaturation = new Mat();
+        Mat modifiedValue = new Mat();
+
+        Core.add(hue, Scalar.all(delta_hue), modifiedHue);
+        Core.add(saturation, Scalar.all(delta_saturation), modifiedSaturation);
+        Core.add(value, Scalar.all(delta_value), modifiedValue);
+
+        hsvChannels.set(0, modifiedHue);
+        hsvChannels.set(1, modifiedSaturation);
+        hsvChannels.set(2, modifiedValue);
+        Core.merge(hsvChannels, hsvImage);
+
+        Mat processedImage = new Mat();
+        Imgproc.cvtColor(hsvImage, processedImage, Imgproc.COLOR_HSV2BGR);
+        Imgproc.cvtColor(processedImage, processedImage, Imgproc.COLOR_BGR2GRAY);
+
+        Imgproc.adaptiveThreshold(processedImage, processedImage, 255.0,
+                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                Imgproc.THRESH_BINARY, 35, 4.0);
+
+        return processedImage;
+    }
+
+
+
+
 
     private boolean isRectangle(MatOfPoint2f polygon, int srcArea) {
         MatOfPoint polygonInt = MathUtils.toMatOfPointInt(polygon);
