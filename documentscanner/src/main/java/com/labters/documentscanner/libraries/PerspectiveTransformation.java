@@ -9,12 +9,16 @@
 
 package com.labters.documentscanner.libraries;
 
+import android.os.Environment;
+
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +38,31 @@ public class PerspectiveTransformation {
         Mat transformation = Imgproc.getPerspectiveTransform(sortedCorners, imageOutline);
         Imgproc.warpPerspective(src, result, transformation, size);
 
+        String fileName = "/bef_perspective.jpg";
+        saveImage(src, fileName);
+
+        fileName = "/after_perspective.jpg";
+        saveImage(result, fileName);
+
         return result;
+    }
+
+    public void saveImage(Mat image, String imageName) {
+        // Define the directory path
+        String directoryPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
+        directoryPath += "/camScan";
+
+        // Create the directory if it doesn't exist
+        File directory = new File(directoryPath);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        // Create the full file path
+        String filePath = directoryPath + imageName;
+
+        // Save the image
+        Imgcodecs.imwrite(filePath, image);
     }
 
     private Size getRectangleSize(MatOfPoint2f rectangle) {

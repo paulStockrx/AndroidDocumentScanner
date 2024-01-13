@@ -1,6 +1,6 @@
 package com.labters.documentscanner
 
-import android.R.attr
+import android.R.attr.bitmap
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -32,7 +32,6 @@ import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint2f
 import org.opencv.core.Point
-import org.opencv.core.Rect
 import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 
@@ -126,7 +125,8 @@ class DocumentScannerView @JvmOverloads constructor(
         ).first()
         image.setImageBitmap(scaledBitmap)
         val tempBitmap = (image.drawable as BitmapDrawable).bitmap
-        val pointFs = getEdgePoints(tempBitmap)
+
+    val pointFs = getEdgePoints(tempBitmap)
         polygonView.points = pointFs
         polygonView.visibility = VISIBLE
         val padding = resources.getDimension(R.dimen.scanPadding).toInt() * 2
@@ -136,112 +136,6 @@ class DocumentScannerView @JvmOverloads constructor(
         polygonView.layoutParams = layoutParams
         polygonView.setPointColor(ContextCompat.getColor(context, R.color.blue))
     }
-//
-//    private suspend fun initializeCropping() {
-//        // Convert selectedImage Bitmap to Mat
-//        val selectedImageMat = Mat()
-//        Utils.bitmapToMat(selectedImage, selectedImageMat)
-//
-//        // Apply the modifiers (contrast, blur, etc.)
-//        val modifiedMat = getModifiedImage(selectedImageMat)
-//
-//        // Convert back to Bitmap
-//        val modifiedBitmap = Bitmap.createBitmap(modifiedMat.cols(), modifiedMat.rows(), Bitmap.Config.ARGB_8888)
-//        Utils.matToBitmap(modifiedMat, modifiedBitmap)
-//
-//        // Set the modified image to the ImageView
-//        image.setImageBitmap(modifiedBitmap)
-//
-//        // Get edge points on the modified image
-//        val tempBitmap = (image.drawable as BitmapDrawable).bitmap
-//        val pointFs = getEdgePoints(tempBitmap)
-//        polygonView.points = pointFs
-//        polygonView.visibility = VISIBLE
-//        val padding = resources.getDimension(R.dimen.scanPadding).toInt() * 2
-//        val layoutParams = LayoutParams(tempBitmap.width + padding, tempBitmap.height + padding)
-//        layoutParams.gravity = Gravity.CENTER
-//        polygonView.layoutParams = layoutParams
-//        polygonView.setPointColor(ContextCompat.getColor(context, R.color.blue))
-//    }
-
-//   HSV
-   private fun getModifiedImage(src: Mat): Mat {
-        val hsvImage = Mat()
-        Imgproc.cvtColor(src, hsvImage, Imgproc.COLOR_BGR2HSV)
-        val hsvChannels = ArrayList<Mat>()
-        Core.split(hsvImage, hsvChannels)
-
-        Core.split(hsvImage, hsvChannels)
-        val hue = hsvChannels[0]
-        val saturation = hsvChannels[1]
-        val value = hsvChannels[2]
-
-        val delta_hue = 10
-        val delta_saturation = 80
-        val delta_value = 40
-
-        val modifiedHue = Mat()
-        val modifiedSaturation = Mat()
-        val modifiedValue = Mat()
-
-        Core.add(hue, Scalar.all(delta_hue.toDouble()), modifiedHue)
-        Core.add(saturation, Scalar.all(delta_saturation.toDouble()), modifiedSaturation)
-        Core.add(value, Scalar.all(delta_value.toDouble()), modifiedValue)
-
-        hsvChannels[0] = modifiedHue
-        hsvChannels[1] = modifiedSaturation
-        hsvChannels[2] = modifiedValue
-        Core.merge(hsvChannels, hsvImage)
-
-        val processedImage = Mat()
-        Imgproc.cvtColor(hsvImage, processedImage, Imgproc.COLOR_HSV2BGR)
-        Imgproc.cvtColor(processedImage, processedImage, Imgproc.COLOR_BGR2GRAY)
-
-        Imgproc.adaptiveThreshold(processedImage, processedImage, 255.0,
-            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-            Imgproc.THRESH_BINARY, 35, 4.0)
-
-
-        return processedImage
-   }
-
-
-//   contrast canny
-//   private fun getModifiedImage(src: Mat): Mat {
-//       val grayCanny = Mat()
-//       val blurred = Mat()
-//       val imgGray = Mat()
-//       val contrast = nativeClass.increaseContrast(src)
-//       Imgproc.cvtColor(contrast, imgGray, Imgproc.COLOR_BGR2GRAY)
-//
-//       Imgproc.medianBlur(imgGray, blurred, 5)
-//
-//       Imgproc.Canny(blurred, grayCanny, 50.0, 80.0)
-//       Imgproc.dilate(grayCanny, grayCanny, Mat.ones(Size(3.0, 3.0), 0))
-//       return grayCanny
-//   }
-
-//    adaptiveThreshold
-//    private fun getModifiedImage(src: Mat): Mat {
-//        val grayCanny = Mat()
-//        val blurred = Mat()
-//        val imgGray = Mat()
-//        val contrast = nativeClass.increaseContrast(src)
-//        Imgproc.cvtColor(contrast, imgGray, Imgproc.COLOR_BGR2GRAY)
-//
-//        Imgproc.medianBlur(imgGray, blurred, 5)
-//
-////       Imgproc.Canny(blurred, grayCanny, 50.0, 80.0)
-////       Imgproc.dilate(grayCanny, grayCanny, Mat.ones(Size(3.0, 3.0), 0))
-//
-//        Imgproc.adaptiveThreshold(blurred, blurred, 255.0,
-//            Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-//            Imgproc.THRESH_BINARY, 15, 1.0)
-////       Imgproc.erode(blurred, grayCanny, Mat.ones(Size(3.0, 3.0), 0))
-//
-//        return blurred
-//    }
-
 
     private fun getEdgePoints(tempBitmap: Bitmap): Map<Int, PointF>? {
         val pointFs: List<PointF> = getContourEdgePoints(tempBitmap)
@@ -278,23 +172,6 @@ class DocumentScannerView @JvmOverloads constructor(
         }
         return orderedPoints
     }
-
-//    @Throws
-//    fun getCroppedImage(): Bitmap {
-//        val points: Map<Int, PointF> = polygonView.points
-//        val xRatio: Float = selectedImage.width.toFloat() / image.width
-//        val yRatio: Float = selectedImage.height.toFloat() / image.height
-//        val x1 = points[0]!!.x * xRatio
-//        val x2 = points[1]!!.x * xRatio
-//        val x3 = points[2]!!.x * xRatio
-//        val x4 = points[3]!!.x * xRatio
-//        val y1 = points[0]!!.y * yRatio
-//        val y2 = points[1]!!.y * yRatio
-//        val y3 = points[2]!!.y * yRatio
-//        val y4 = points[3]!!.y * yRatio
-//        val finalBitmap: Bitmap = selectedImage.copy(selectedImage.config, true)
-//        return nativeClass.getScannedBitmap(finalBitmap, x1, y1, x2, y2, x3, y3, x4, y4)
-//    }
     @Throws
     fun getCroppedImage(): Bitmap {
         val perspectiveTransformation = PerspectiveTransformation()
@@ -328,8 +205,6 @@ class DocumentScannerView @JvmOverloads constructor(
         val grayMat = Mat()
         Imgproc.cvtColor(resultMat, grayMat, Imgproc.COLOR_RGB2GRAY)
 
-//        Imgproc.GaussianBlur(grayMat, grayMat, Size(5.0, 5.0), 0.0)
-
         Imgproc.adaptiveThreshold(grayMat, grayMat, 255.0,
             Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
             Imgproc.THRESH_BINARY, 31, 7.0)
@@ -337,11 +212,16 @@ class DocumentScannerView @JvmOverloads constructor(
         val finalBitmap = Bitmap.createBitmap(grayMat.cols(), grayMat.rows(), Bitmap.Config.ARGB_8888)
         Utils.matToBitmap(grayMat, finalBitmap)
 
+        val finalMat = Mat()
+        Utils.bitmapToMat(finalBitmap, finalMat)
+        nativeClass.saveImage(finalMat, "/final_norm.jpg")
+    nativeClass.saveImage(resultMat, "/final.jpg")
+
         resultMat.release()
         grayMat.release()
         selectedImageMat.release()
 
-        return finalBitmap
+        return resultBitmap
     }
 
     private fun doWhenInitialised(function: () -> Unit) {
