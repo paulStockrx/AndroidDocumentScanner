@@ -128,7 +128,6 @@ public class NativeClass {
         Imgproc.cvtColor(src, src, Imgproc.COLOR_BGR2RGB);
 
         Mat blurred = new Mat();
-//        Imgproc.medianBlur(src, blurred, 3);
         Imgproc.GaussianBlur(src, blurred, new Size(5, 5), 0);
         fileName = "/blurred.jpg";
         saveImage(blurred, fileName);
@@ -161,21 +160,21 @@ public class NativeClass {
         Mat processedImage = new Mat();
         Imgproc.cvtColor(hsvImage, processedImage, Imgproc.COLOR_HSV2BGR);
 
-        fileName = "/hsv.jpg";
-        saveImage(processedImage, fileName);
+//        fileName = "/hsv.jpg";
+//        saveImage(processedImage, fileName);
 
         Mat cannyImage = new Mat();
         Imgproc.Canny(processedImage, cannyImage, 40, 80);
 
-        fileName = "/canny.jpg";
-        saveImage(cannyImage, fileName);
+//        fileName = "/canny.jpg";
+//        saveImage(cannyImage, fileName);
 
         Mat dilatedImage = new Mat();
         Mat dilateElement = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
         Imgproc.dilate(cannyImage, dilatedImage, dilateElement);
 
-        fileName = "/dilate.jpg";
-        saveImage(dilatedImage, fileName);
+//        fileName = "/dilate.jpg";
+//        saveImage(dilatedImage, fileName);
 
 //        Imgproc.cvtColor(processedImage, processedImage, Imgproc.COLOR_BGR2GRAY);
 //        Mat adaptiveImage = new Mat();
@@ -186,22 +185,22 @@ public class NativeClass {
 //        fileName = "/adaptiveThreshold.jpg";
 //        saveImage(adaptiveImage, fileName);
 
-        List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(dilatedImage, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        Mat contoursImage = src.clone();
-
-        double areaThreshold = 500;
-
-        for (int i = 0; i < contours.size(); i++) {
-            double contourArea = Imgproc.contourArea(contours.get(i));
-            if (contourArea > areaThreshold) {
-                Imgproc.drawContours(contoursImage, contours, i, new Scalar(0, 255, 0), 2);
-            }
-        }
-
-        fileName = "/contours.jpg";
-        saveImage(contoursImage, fileName);
+//        List<MatOfPoint> contours = new ArrayList<>();
+//        Imgproc.findContours(dilatedImage, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+//
+//        Mat contoursImage = src.clone();
+//
+//        double areaThreshold = 500;
+//
+//        for (int i = 0; i < contours.size(); i++) {
+//            double contourArea = Imgproc.contourArea(contours.get(i));
+//            if (contourArea > areaThreshold) {
+//                Imgproc.drawContours(contoursImage, contours, i, new Scalar(0, 255, 0), 2);
+//            }
+//        }
+//
+//        fileName = "/contours.jpg";
+//        saveImage(contoursImage, fileName);
 
         return dilatedImage;
     }

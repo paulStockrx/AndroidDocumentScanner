@@ -1,6 +1,5 @@
 package com.labters.documentscanner
 
-import android.R.attr.bitmap
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -27,12 +26,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import org.opencv.android.Utils
-import org.opencv.core.Core
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint2f
 import org.opencv.core.Point
-import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 
 
@@ -126,7 +123,7 @@ class DocumentScannerView @JvmOverloads constructor(
         image.setImageBitmap(scaledBitmap)
         val tempBitmap = (image.drawable as BitmapDrawable).bitmap
 
-    val pointFs = getEdgePoints(tempBitmap)
+        val pointFs = getEdgePoints(tempBitmap)
         polygonView.points = pointFs
         polygonView.visibility = VISIBLE
         val padding = resources.getDimension(R.dimen.scanPadding).toInt() * 2
